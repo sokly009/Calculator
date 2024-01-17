@@ -169,20 +169,25 @@ class _CalculatorState extends State<Calculator> {
   }
 
   void handleButtons(String text) {
-     if (text == 'C') {
-    setState(() {
-      userInput = '';
-      result = '0';
-    });
-    return;
-  }
+    if (text == 'C') {
+      setState(() {
+        userInput = '';
+        result = '0';
+      });
+      return;
+    }
     if (text == 'DEL') {
       if (userInput.isNotEmpty) {
         userInput = userInput.substring(0, userInput.length - 1);
-        return;
-      } else {
-        return;
+        if (userInput.contains(RegExp(r'[/%x+\-]\d')) && userInput.length > 2) {
+          result = calculate();
+        } else {
+          if (RegExp(r'\d').hasMatch(userInput)) {
+            result = userInput;
+          }
+        }
       }
+      return;
     }
 
     if (text == 'ANS') {
@@ -191,22 +196,35 @@ class _CalculatorState extends State<Calculator> {
     }
 
     if (text == "=") {
-      result = calculate();
-      lastResult = result;
-      userInput = result;
-      if (result.endsWith('.0')) {
-        userInput = userInput.replaceAll('.0', '');
+      if (userInput.isEmpty) {
+        result = '0';
+      } else {
+        result = calculate();
+        lastResult = result;
+        userInput = result;
+        if (result.endsWith('.0')) {
+          userInput = userInput.replaceAll('.0', '');
+        }
+        if (result.endsWith('.0')) {
+          result = result.replaceAll('.0', '');
+        }
       }
-      if (result.endsWith('.0')) {
-        result = result.replaceAll('.0', '');
-      }
+      return;
     }
     userInput = userInput + text;
+    if (userInput.contains(RegExp(r'[/%x+\-]\d')) && userInput.length > 2) {
+      result = calculate();
+    } else {
+      if (RegExp(r'\d').hasMatch(text)) {
+        result = userInput;
+      }
+    }
   }
 
   String calculate() {
     try {
-      String expression = userInput.replaceAll('x', '*').replaceAll('%', '/100');
+      String expression =
+          userInput.replaceAll('x', '*').replaceAll('%', '/100');
       var exp = Parser().parse(expression);
       var evaluation = exp.evaluate(EvaluationType.REAL, ContextModel());
       return evaluation.toString();
